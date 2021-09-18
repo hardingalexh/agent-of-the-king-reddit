@@ -136,7 +136,7 @@ def process_symbols(card):
     message = ""
     for stat in stats:
         if(card.get(f'skill_{stat.lower()}')):
-            message += f"{stat} x{str(card.get('skill_' + stat.lower()))}"
+            message += f" {stat} x{str(card.get('skill_' + stat.lower()))}"
     return message
 
 def main():
@@ -145,6 +145,7 @@ def main():
         already_replied = False
         if comment.author.name == reddit.user.me().name:
             already_replied = True
+        comment.refresh() # fetches comment replies
         for reply in comment.replies:
             if reply.author.name == reddit.user.me().name:
                 already_replied = True
