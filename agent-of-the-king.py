@@ -20,7 +20,11 @@ reddit = praw.Reddit(
 )
 
 subreddit = reddit.subreddit('jaguarbottesting')
-      
+
+##########################################################
+# For a given search string, find all matching cards and #
+# respond once with each card                            #
+##########################################################     
 def respond_with_cards(comment, cardsearch):
     for search in cardsearch:
         levelSearch = re.search('(?<=\().+?(?=\))', search)
