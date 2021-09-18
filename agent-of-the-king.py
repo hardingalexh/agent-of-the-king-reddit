@@ -21,6 +21,8 @@ reddit = praw.Reddit(
 
 subreddit = reddit.subreddit('jaguarbottesting')
 
+footer = f"\n\n***\n\n^(I am a bot. This message was posted automatically. For more information or to log an issues, check me out on) [github](https://github.com/hardingalexh/agent-of-the-king-reddit)"
+
 ##########################################################
 # For a given search string, find all matching cards and #
 # respond once with each card                            #
@@ -107,13 +109,8 @@ def respond_with_cards(comment, cardsearch):
         message += f"[View card on ArkhamDB]({match.get('url')})"
 
         ## Horizontal Rule
-        message +="\n\n"
-        message += "***"
-
-        ## Bot Disclaimer
-        message += "\n\n"
-        message += "^(I am a bot. This is a test.)"
-
+        message += footer
+        
         comment.reply(message)
 
 ##########################################################
@@ -143,6 +140,93 @@ def process_symbols(card):
             message += f" {stat} x{str(card.get('skill_' + stat.lower()))}"
     return message
 
+##########################################################
+# Embeds decks if a valid arkhamdb deck link is detected #
+##########################################################
+def respond_with_deck(comment):
+    content = comment.body.lower()
+    # parse message to get deck id and type (decklist or deck)
+    deckId = None
+    deckType = None
+    if "arkhamdb.com/deck/view/" in content:
+        deckId = re.search('(?<=arkhamdb\.com\/deck\/view\/).+?(?=\b|$|\s)', content)
+        deckType = 'deck'
+    if "https://arkhamdb.com/decklist/" in content:
+        deckId = re.search('(?<=arkhamdb\.com\/decklist\/view\/).+?(?=\b|$|\s)', content)
+        deckType = 'decklist'
+
+    
+    if deckId:
+        # get deck from arkhamdb api
+        deckId = deckId.group()
+        ## hacky hedge for when regex doesn't work the way I expect it to
+        deckId = deckId.split('/')[0]
+        if deckType == 'deck':
+            apiString = 'https://arkhamdb.com/api/public/deck/' + deckId
+        if deckType == 'decklist':
+            apiString = 'https://arkhamdb.com/api/public/decklist/' + deckId
+        deckJson = requests.get(apiString).json()
+
+        # create initial message
+        
+        message = ""
+        # Use gator/deck name as header
+        gator = list(filter(lambda card: card.get('code', 0) == deckJson.get('investigator_code', None), cards))[0]
+        message += f"#{gator.get('name', '')}: {deckJson.get('name', '')} {deckJson.get('version', '')}"
+
+
+        ## Add link back to arkhamdb
+        message += "\n\n"
+        if deckType == 'deck':
+            message += f'[View on Arkhamdb](https://arkhamdb.com/deck/view/{deckId})'
+        if (deckType == 'decklist'):
+            message += f'[View on Arkhamdb](https://arkhamdb.com/decklist/view{deckId})'
+        
+        ## Horizontal Rule
+        message +="\n\n"
+        message += "***"
+
+        ## get all cards used in deck
+        deckCards = list(filter(lambda card: card.get('code', '') in deckJson.get('slots', {}).keys(), cards))
+
+        categories = ['Asset', 'Permanent', 'Event', 'Skill', 'Treachery', 'Enemy']
+        for category in categories:
+            ## handle category codes
+            if(category == 'Permanent'):
+                categoryCards = list(filter(lambda card: card.get('permanent', False) == True, deckCards))
+            else:
+                categoryCards = list(filter(lambda card: card.get('type_code', '') == category.lower() and card.get('permanent', False) == False, deckCards))
+            if(category == 'Treachery'):
+                message += '\n\n **Treacheries:**'
+            elif(category == 'Enemy'):
+                message += '\n\n **Enemies:**'
+            else:
+                message += f'\n\n **{category}s:**'
+            # handle asset slots
+            if category == 'Asset':
+                def slotFilter(e):
+                    return e.get('slot', 'zzzzzz')
+                categoryCards.sort(key=slotFilter)
+                slots = []
+
+            for card in categoryCards:
+                cardString = f"{deckJson.get('slots')[card.get('code')]} x "
+                cardString += f"[{card.get('name', '')}]({card.get('url', '')})"
+                if card.get('xp', 0) > 0:
+                    cardString += ' (' + str(card.get('xp', 0)) + ')'
+
+                if category == 'Asset' and card.get('slot', '') not in slots:
+                    message += '\n\n' + card.get('slot', 'Other') + ':'
+                    slots.append(card.get('slot', ''))
+                message += '\n\n' + cardString
+            message += '\n\n'
+        
+
+        ## footer
+        message += footer
+
+        comment.reply(message)
+
 def main():
     checks = 0
     for comment in subreddit.stream.comments():
@@ -154,9 +238,15 @@ def main():
             if reply.author.name == reddit.user.me().name:
                 already_replied = True
         if not already_replied:
+
+            # search for cards
             cardsearch = re.findall('(?<=\[\[).+?(?=\]\])', comment.body)
             if len(cardsearch):
                 respond_with_cards(comment, cardsearch)
+            
+            # search for arkhamdb decks
+            if "arkhamdb.com/deck/view/" in comment.body.lower() or 'arkhamdb.com/decklist/view/' in comment.body.lower():
+                respond_with_deck(comment)
 
 if __name__ == "__main__":
     main()
