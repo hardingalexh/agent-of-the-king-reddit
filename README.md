@@ -9,14 +9,14 @@ To have the bot respond to your comment with cards, include the name of your car
 
 * Search is not case sensitive
 * Search will return every card that matches a substring:
-    * for example, searching [[derringer]] will return both the .41 Derringer and the .18 Derringer
+    * for example, searching `[[derringer]]` will return both the .41 Derringer and the .18 Derringer
 * Searches can optionally include a level in parentheses
-    * for example, [[.41 Derringer]] will return both the level 0 and the level 2, but [[.41 derringer (0)]] will only return the level 0 version
+    * for example, `[[.41 Derringer]]` will return both the level 0 and the level 2, but `[[.41 derringer (0)]]` will only return the level 0 version
 * Multiple embeds per post will return multiple comments
-    * For example, commenting "you should consider either the [[.41 derringer (2)]] or the [[chicago typewriter]] will return comments with each card embedded
+    * For example, commenting "you should consider either the `[[.41 derringer (2)]]` or the `[[chicago typewriter]]` will return comments with each card embedded
 
 ### Deck Embeds
-Any comment that includes a link to a valid arkhamdb deck or decklist will receive a reply with a formatted version of that deck's contents. Valid links include decks (for example https://arkhamdb.com/deck/view/1514964) and decklists (https://arkhamdb.com/decklist/view/29846/nun-with-a-gun-post-play-1.0).
+Any comment that includes a link to a valid arkhamdb deck or decklist will receive a reply with a formatted version of that deck's contents. Valid links include decks (for example `https://arkhamdb.com/deck/view/1514964`) and decklists (`https://arkhamdb.com/decklist/view/29846/nun-with-a-gun-post-play-1.0`).
 
 ## Development
 
