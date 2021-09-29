@@ -160,8 +160,11 @@ def respond_with_deck(comment):
         import pdb; pdb.set_trace()
         # get deck from arkhamdb api
         deckId = deckId.group()
+
         ## hacky hedge for when regex doesn't work the way I expect it to
         deckId = deckId.split('/')[0]
+        deckId = deckId.split(']')[0]
+
         if deckType == 'deck':
             apiString = 'https://arkhamdb.com/api/public/deck/' + deckId
         if deckType == 'decklist':
