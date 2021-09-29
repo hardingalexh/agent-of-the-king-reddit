@@ -19,7 +19,7 @@ reddit = praw.Reddit(
     password = os.getenv('PASSWORD')
 )
 
-subreddit = reddit.subreddit('jaguarbottesting')
+subreddit = reddit.subreddit(os.getenv('SUBREDDIT'))
 
 footer = f"\n\n***\n\n^(I am a bot. This message was posted automatically. For more information or to log an issues, check me out on) [github](https://github.com/hardingalexh/agent-of-the-king-reddit)"
 
@@ -157,6 +157,7 @@ def respond_with_deck(comment):
 
     
     if deckId:
+        import pdb; pdb.set_trace()
         # get deck from arkhamdb api
         deckId = deckId.group()
         ## hacky hedge for when regex doesn't work the way I expect it to
