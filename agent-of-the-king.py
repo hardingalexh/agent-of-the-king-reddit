@@ -47,7 +47,14 @@ def respond_with_cards(comment, cardsearch):
                 matches = list(filter(lambda card: (searchTerm.lower() in card.get('name', '').lower()) and (card.get('xp', 0) == int(levelTerm)), cards))
         else:
             matches = list(filter(lambda card: search.lower() in card.get('name', '').lower(), cards))
+    if len(matches) > 8:
+        respond_with_error(comment, 1)
+        return
+    elif len(matches) == 0:
+        respond_with_error(comment, 2)
+        return
 
+    responses = []
     for match in matches:
         message = ""
         message += f"##{match.get('name')}"
@@ -109,11 +116,12 @@ def respond_with_cards(comment, cardsearch):
         ## Card URL
         message += "\n\n"
         message += f"[View card on ArkhamDB]({match.get('url')})"
+        responses.append(message)
 
-        ## Horizontal Rule
-        message += footer
-        
-        comment.reply(message)
+    ## Horizontal Rule
+    response = "\n\n***\n\n".join(responses)
+    response += footer
+    comment.reply(response)
 
 ##########################################################
 # Reprocesses ArkhamDB markdown to reddit markdown       #
@@ -171,7 +179,11 @@ def respond_with_deck(comment):
             apiString = 'https://arkhamdb.com/api/public/deck/' + deckId
         if deckType == 'decklist':
             apiString = 'https://arkhamdb.com/api/public/decklist/' + deckId
-        deckJson = requests.get(apiString).json()
+        try:
+            deckJson = requests.get(apiString).json()
+        except:
+            respond_with_error(comment, 0)
+            return
 
         # create initial message
         
@@ -233,6 +245,18 @@ def respond_with_deck(comment):
 
         comment.reply(message)
 
+##########################################################
+# Returns error for recognized but invalid queries       #
+##########################################################
+def respond_with_error(comment, error):
+    errors = [
+        'Something went wrong attempting to retrieve your deck from ArkhamDB.',
+        "Your search returned more than 8 cards, and that's my hand limit.",
+        "Your search returned no results."
+    ]
+    message = f"{errors[error]} Take one horror."
+    comment.reply(message)
+
 def main():
     checks = 0
     for comment in subreddit.stream.comments():
@@ -249,7 +273,7 @@ def main():
             cardsearch = re.findall('(?<=\[\[).+?(?=\]\])', comment.body)
             if len(cardsearch):
                 respond_with_cards(comment, cardsearch)
-            
+
             # search for arkhamdb decks
             if "arkhamdb.com/deck/view/" in comment.body.lower() or 'arkhamdb.com/decklist/view/' in comment.body.lower():
                 respond_with_deck(comment)
