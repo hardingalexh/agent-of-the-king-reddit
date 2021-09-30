@@ -51,6 +51,8 @@ def respond_with_cards(comment, cardsearch):
     for match in matches:
         message = ""
         message += f"##{match.get('name')}"
+        if match.get('xp', False):
+            message += f" ({match.get('xp')})"
 
         ## Faction, Type, Slot
         message += "\n\n"
@@ -133,7 +135,7 @@ def process_text(text):
 # Creates a string of test icons for a given player card #
 ##########################################################
 def process_symbols(card):
-    stats = ['Willpower', 'Intellect', 'Combat', 'Agility']
+    stats = ['Willpower', 'Intellect', 'Combat', 'Agility', 'Wild']
     message = ""
     for stat in stats:
         if(card.get(f'skill_{stat.lower()}')):
@@ -157,7 +159,6 @@ def respond_with_deck(comment):
 
     
     if deckId:
-        import pdb; pdb.set_trace()
         # get deck from arkhamdb api
         deckId = deckId.group()
 
