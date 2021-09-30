@@ -165,6 +165,7 @@ def respond_with_deck(comment):
         ## hacky hedge for when regex doesn't work the way I expect it to
         deckId = deckId.split('/')[0]
         deckId = deckId.split(']')[0]
+        deckId = deckId.split(')')[0]
 
         if deckType == 'deck':
             apiString = 'https://arkhamdb.com/api/public/deck/' + deckId
