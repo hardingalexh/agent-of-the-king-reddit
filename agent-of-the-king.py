@@ -27,8 +27,14 @@ footer = f"\n\n***\n\n^(I am a bot. This message was posted automatically. For m
 # For a given search string, find all matching cards and #
 # respond once with each card                            #
 ##########################################################     
-def respond_with_cards(comment, cardsearch):
+def respond_with_cards_and_deck(comment, cardsearch):
+    deck_searched = False
     for search in cardsearch:
+        # search for arkhamdb decks
+        if "arkhamdb.com/deck/view/" in search or 'arkhamdb.com/decklist/view/' in search:
+            respond_with_deck(search, comment)
+            continue
+
         levelSearch = re.search('(?<=\().+?(?=\))', search)
         if levelSearch:
             endpos = levelSearch.span()[0] - 1
@@ -50,24 +56,31 @@ def respond_with_cards(comment, cardsearch):
     if len(matches) > 8:
         respond_with_error(comment, 1)
         return
-    elif len(matches) == 0:
+    elif len(matches) == 0 and not deck_searched:
         respond_with_error(comment, 2)
         return
 
     responses = []
     for match in matches:
         message = ""
-        message += f"##{match.get('name')}"
+        message += f"###[{match.get('name')}]({match.get('url')})"
         if match.get('xp', False):
             message += f" ({match.get('xp')})"
+        
+        ## Card Image
+        if match.get('imagesrc'):
+            message +="\n\n"
+            message += f" [Card Image](https://www.arkhamdb.com{match.get('imagesrc')})"
 
-        ## Faction, Type, Slot
-        message += "\n\n"
+        ## Cost, Faction, Type, Slot
+        message += "* "
         if match.get('faction') != "Mythos":
             message += f"Faction: _{match.get('faction_name')}_. "
-        message += f"Type: _{match.get('type_name')}_"
+        if match.get('cost'):
+            message += f"Cost: _{match.get('cost')}_ "
+        message += f"Type: _{match.get('type_name')}_ "
         if match.get('slot', False):
-            message += f" Slot: {match.get('slot')}"
+            message += f"Slot: _{match.get('slot')}_"
 
         ## Trait(s)
         message += "\n\n"
@@ -107,15 +120,7 @@ def respond_with_cards(comment, cardsearch):
         ## Card Text
         message += "\n\n"
         message += f"{process_text(match.get('text'))}"
-
-        ## Card Image
-        if match.get('imagesrc'):
-            message +="\n\n"
-            message += f"[Card Image](https://www.arkhamdb.com{match.get('imagesrc')})"
-
-        ## Card URL
-        message += "\n\n"
-        message += f"[View card on ArkhamDB]({match.get('url')})"
+        
         responses.append(message)
 
     ## Horizontal Rule
@@ -153,16 +158,15 @@ def process_symbols(card):
 ##########################################################
 # Embeds decks if a valid arkhamdb deck link is detected #
 ##########################################################
-def respond_with_deck(comment):
-    content = comment.body.lower()
+def respond_with_deck(search, comment):
     # parse message to get deck id and type (decklist or deck)
     deckId = None
     deckType = None
-    if "arkhamdb.com/deck/view/" in content:
-        deckId = re.search('(?<=arkhamdb\.com\/deck\/view\/).+?(?=\b|$|\s)', content)
+    if "arkhamdb.com/deck/view/" in search:
+        deckId = re.search('(?<=arkhamdb\.com\/deck\/view\/).+?(?=\b|$|\s)', search)
         deckType = 'deck'
-    if "https://arkhamdb.com/decklist/" in content:
-        deckId = re.search('(?<=arkhamdb\.com\/decklist\/view\/).+?(?=\b|$|\s)', content)
+    if "https://arkhamdb.com/decklist/" in search:
+        deckId = re.search('(?<=arkhamdb\.com\/decklist\/view\/).+?(?=\b|$|\s)', search)
         deckType = 'decklist'
 
     
@@ -272,11 +276,10 @@ def main():
             # search for cards
             cardsearch = re.findall('(?<=\[\[).+?(?=\]\])', comment.body)
             if len(cardsearch):
-                respond_with_cards(comment, cardsearch)
+                respond_with_cards_and_decks(comment, cardsearch)
 
-            # search for arkhamdb decks
-            if "arkhamdb.com/deck/view/" in comment.body.lower() or 'arkhamdb.com/decklist/view/' in comment.body.lower():
-                respond_with_deck(comment)
+                
+            
 
 if __name__ == "__main__":
     main()
