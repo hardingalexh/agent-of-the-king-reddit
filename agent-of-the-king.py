@@ -21,7 +21,7 @@ reddit = praw.Reddit(
 
 subreddit = reddit.subreddit(os.getenv('SUBREDDIT'))
 
-footer = f"\n\n***\n\n^(I am a bot. This message was posted automatically. For more information or to log an issues, check me out on) [github](https://github.com/hardingalexh/agent-of-the-king-reddit)"
+footer = f"  \n***  \n^(I am a bot. This message was posted automatically. For more information or to log an issues, check me out on) [github](https://github.com/hardingalexh/agent-of-the-king-reddit)"
 
 ##########################################################
 # For a given search string, find all matching cards and #
@@ -69,7 +69,7 @@ def respond_with_cards_and_deck(comment, cardsearch):
         
         ## Card Image
         if match.get('imagesrc'):
-            message +="\n\n"
+            message +="  \n"
             message += f" [Card Image](https://www.arkhamdb.com{match.get('imagesrc')})"
 
         ## Cost, Faction, Type, Slot
@@ -83,18 +83,18 @@ def respond_with_cards_and_deck(comment, cardsearch):
             message += f"Slot: _{match.get('slot')}_"
 
         ## Trait(s)
-        message += "\n\n"
+        message += "  \n"
         message += f"Traits: _{match.get('traits')}_"
 
         ## Test Icons
         processed_symbols = process_symbols(match)
         if processed_symbols != "":
-            message += "\n\n"
+            message += "  \n"
             message += f"Test Icons: {processed_symbols}"
 
         ## Health, Sanity
         if (match.get('health') or match.get('sanity')) and match.get('type_code') != 'enemy':
-            message += "\n\n"
+            message += "  \n"
             if(match.get('health')):
                 message += f"Health: {str(match.get('health'))}. "
             if(match.get('sanity')):
@@ -102,29 +102,29 @@ def respond_with_cards_and_deck(comment, cardsearch):
         
         ## Enemy Stats
         if match.get('type_code') == 'enemy':
-            message += "\n\n"
+            message += "  \n"
             message += f"Fight: {str(match.get('enemy_fight'))}. Evade: {str(match.get('enemy_evade'))}."
 
-            message += "\n\n"
+            message += "  \n"
             message += f"Health: {str(match.get('health'))}"
             if match.get('health_per_investigator', False):
                 message += " Per Investigator"
 
-            message += "\n\n"
+            message += "  \n"
             message += f"Damage: {str(match.get('enemy_damage'))}. Horror: {str(match.get('enemy_horror'))}"
 
             if match.get('victory', False):
-                message += "\n\n"
+                message += "  \n"
                 message += f"Victory {match.get('victory')}"
 
         ## Card Text
-        message += "\n\n"
+        message += "  \n"
         message += f"{process_text(match.get('text'))}"
         
         responses.append(message)
 
     ## Horizontal Rule
-    response = "\n\n***\n\n".join(responses)
+    response = "  \n***  \n".join(responses)
     response += footer
     comment.reply(response)
 
@@ -141,7 +141,7 @@ def process_text(text):
     text = text.replace("<i>", "_")
     text = text.replace("</i>", "_")
 
-    text = text.replace("\n", "\n\n")
+    text = text.replace("\n", "  \n")
     return text
 
 ##########################################################
@@ -198,14 +198,14 @@ def respond_with_deck(search, comment):
 
 
         ## Add link back to arkhamdb
-        message += "\n\n"
+        message += "  \n"
         if deckType == 'deck':
             message += f'[View on Arkhamdb](https://arkhamdb.com/deck/view/{deckId})'
         if (deckType == 'decklist'):
             message += f'[View on Arkhamdb](https://arkhamdb.com/decklist/view{deckId})'
         
         ## Horizontal Rule
-        message +="\n\n"
+        message +="  \n"
         message += "***"
 
         ## get all cards used in deck
@@ -219,11 +219,11 @@ def respond_with_deck(search, comment):
             else:
                 categoryCards = list(filter(lambda card: card.get('type_code', '') == category.lower() and card.get('permanent', False) == False, deckCards))
             if(category == 'Treachery'):
-                message += '\n\n **Treacheries:**'
+                message += '  \n **Treacheries:**'
             elif(category == 'Enemy'):
-                message += '\n\n **Enemies:**'
+                message += '  \n **Enemies:**'
             else:
-                message += f'\n\n **{category}s:**'
+                message += f'  \n **{category}s:**'
             # handle asset slots
             if category == 'Asset':
                 def slotFilter(e):
@@ -238,10 +238,10 @@ def respond_with_deck(search, comment):
                     cardString += ' (' + str(card.get('xp', 0)) + ')'
 
                 if category == 'Asset' and card.get('slot', '') not in slots:
-                    message += '\n\n' + card.get('slot', 'Other') + ':'
+                    message += '  \n' + card.get('slot', 'Other') + ':'
                     slots.append(card.get('slot', ''))
-                message += '\n\n' + cardString
-            message += '\n\n'
+                message += '  \n' + cardString
+            message += '  \n'
         
 
         ## footer
